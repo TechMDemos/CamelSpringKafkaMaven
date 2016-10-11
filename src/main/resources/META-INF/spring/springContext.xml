@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:camel="http://camel.apache.org/schema/spring"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd http://camel.apache.org/schema/spring http://camel.apache.org/schema/spring/camel-spring.xsd http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd">
+
+    <!--<context:component-scan base-package="Integration"/>-->
+    <context:property-placeholder location="META-INF/spring/env.properties"/>
+    <bean id="ExceptionManager" class="Integration.ExceptionManager"></bean>
+    <bean id="FileProcessor" class="Integration.myProcessor"/>
+    <camel:camelContext id="camel">
+        <camel:route>
+            <camel:from uri="file:./tmp?move=./done&amp;moveFailed=./failed"/> <!-- INPUT -->
+            <camel:process ref="FileProcessor"/>
+            <camel:to uri="kafka:172.16.0.117:9092?topic=TutorialTopic&amp;serializerClass=kafka.serializer.StringEncoder" /> <!-- OUTPUT -->
+
+            <camel:onException>
+                <camel:exception>java.lang.Exception</camel:exception>
+                <camel:process ref="ExceptionManager"/>
+            </camel:onException>
+        </camel:route>
+    </camel:camelContext>
+</beans>
